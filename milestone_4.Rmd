@@ -1,0 +1,168 @@
+---
+title: "milestone4"
+author: "Janna Ramadan"
+date: "10/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(rtweet)
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(gganimate)
+```
+
+
+```{r, data-set-up}
+# load datasets
+
+
+fbi2018 <- read_excel("rawdata/fbi2018.xls") %>%
+  slice(4: 49) %>%
+  select(1, 4) 
+  # names(Table 1) <- "Bias Motivation" %>%
+  # names(...4) <- "Number of Victims"
+
+fbi2017 <- read_excel("rawdata/fbi2017.xls")%>%
+  slice(3: 49) %>%
+  select(1, 4)
+
+fbi2016 <- read_excel("rawdata/fbi2016.xls")%>%
+  slice(3: 49) %>%
+  select(1, 4)
+
+fbi2015 <- read_excel("rawdata/fbi2015.xls") %>%
+  slice(3: 49) %>%
+  select(1, 4)
+
+fbi2014 <- read_excel("rawdata/fbi2014.xls") %>%
+  slice(3: 49) %>%
+  select(1, 4)
+
+fbi2013 <- read_excel("rawdata/fbi2013.xls") %>%
+  slice(3: 49) %>%
+  select(1, 4)
+
+fbi2012 <- read_excel("rawdata/fbi2012.xls") %>%
+  slice(3: 49) %>%
+  select(1, 4)
+
+```
+
+```{r, making-one-data-set }
+fbi78 <- full_join(fbi2018, fbi2017) %>%
+  #  as.data.frame(apply(as.numeric)) %>%
+  rename(bias_motivation = "Table 1", count = "...4") %>%
+  filter(bias_motivation == "Anti-Islamic (Muslim)" | bias_motivation == "Anti-Arab") 
+
+fbi56 <- full_join(fbi2015, fbi2016) %>%
+  rename(bias_motivation = "Table 1", count = "...4") %>%
+  filter(bias_motivation == "Anti-Islamic (Muslim)" | bias_motivation == "Anti-Arab") 
+
+fbi34 <- full_join(fbi2013, fbi2014) %>%
+  rename(bias_motivation = "Table 1", count = "...4") %>%
+  filter(bias_motivation == "Anti-Islamic (Muslim)" | bias_motivation == "Anti-Arab") 
+
+fbi2 <- fbi2012 %>%
+  rename(bias_motivation = "Table 1", count = "...4") %>%
+  filter(bias_motivation == "Anti-Islamic" | bias_motivation == "Anti-Arab")
+
+  fbi2[1,1] <- "Anti-Islamic (Muslim)"
+
+fbi5_8 <- full_join(fbi56, fbi78)
+fbi2_4 <- full_join(fbi2, fbi34)
+
+
+fbi12_18 <- full_join(fbi2_4, fbi5_8)
+
+  fbi12_18$year <- c("2012", "2013", "2014", "2015", "2015", "2016", "2016", "2018", "2018", "2017", "2017")
+
+  fbicompiled <- fbi12_18 %>%
+    mutate("count" = as.numeric(count)) %>%
+    arrange(desc(count))
+  #find a wya to set cols earlier while merging
+    
+  sapply(fbi12_18, class)
+    
+  
+```
+
+```{r, animated graph}
+# stack overflow, animate
+
+ggplot(data = fbicompiled, mapping = aes(x = year, y = count, color = bias_motivation)) +
+  geom_point() +
+  theme_minimal() +
+  transition_states(bias_motivation, transition_length = )
+```
+
+```{r, google trend news}
+newstrends08_20 <- read_csv("rawdata/googletrends.csv")
+ #                           cols(
+#  Month = col_double(),
+ # Year = col_double(),
+  #Month_1 = col_double(),
+#  `Month (Name)` = col_character(),
+ # Muslim = col_double(),
+  # Terrorism = col_double()))
+ # I know it needs cols(), but whenever I add cols it gives me 
+
+ggplot(data = newstrends08_20, mapping = aes(x = Year, color = )) +
+  geom_histogram()
+```
+
+
+```{r}
+
+#ggplot(data = newstrends08_20, mapping = aes(x = months.Date())) +
+  #geom_histogram()
+
+#, 
+ #                           cols(
+ # Month = col_character(),
+ # Year = col_double(),
+ # Month_1 = col_double(),
+ # `Month (Name)` = col_character(),
+ # Muslim = col_double(),
+ # Terrorism = col_double()
+# ))
+```
+
+
+
+
+
+
+
+
+```{r, twitter attempt content}
+appname <- "muslimopinion"
+  
+key <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
+
+secretkey <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
+
+muslim_extremist_search_string <- c("muslim extremist", "muslim terrorist", "muslim radical")
+
+muslimradicals_tweets <- search_tweets(type = "recent", 
+                                       q = "muslim terrorist",
+                               n = 100, 
+                               include_rts = FALSE,
+                               "lang:en",
+                               geocode = lookup_coords("usa"))  %>%
+  select("created_at", "text", "hashtags")
+
+# https://en.wikipedia.org/wiki/Geographic_center_of_the_contiguous_United_States
+# shows that Lebanon, kensas is the midpoint of the continuous US.
+
+#twitter_token <- create_token(
+ # app = appname,
+ # consumer_key = key,
+ # consumer_secret = secretkey)
+```
+
