@@ -15,6 +15,7 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 library(gganimate)
+library(shiny)
 ```
 
 
@@ -87,18 +88,27 @@ fbi12_18 <- full_join(fbi2_4, fbi5_8)
     arrange(desc(count))
   #find a wya to set cols earlier while merging
     
-  sapply(fbi12_18, class)
+write_csv(fbicompiled, "fbicompiled.csv")
     
   
 ```
 
-```{r, animated graph}
-# stack overflow, animate
+```{r}
 
-ggplot(data = fbicompiled, mapping = aes(x = year, y = count, color = bias_motivation)) +
-  geom_point() +
-  theme_minimal() +
-  transition_states(bias_motivation, transition_length = )
+      ggplot(data = fbicompiled, mapping = aes(x = year, y = count, color = bias_motivation)) +
+        geom_point(size = 2) +
+        theme_grey() +
+        labs(title = "2012-2018 Count of Hate Crimes\n Motivated By Anti-Muslim or \nAnti-Arab Sentiment",
+             subtitle = "Counts victims of hate crimes \nwithin the United States",
+             x = "Year",
+             y = "Victim Count",
+             caption = "Source: FBI Hate Crimes") +
+        scale_color_manual(name = "Hate Crime Motivation",
+                           labels = c("Anti-Arab \nSentiment", "Anti-Muslim \nSentiment"),
+                           values = c("olivedrab3", "lightskyblue2")) +
+        theme(axis.text.x = element_text(size = 5, angle = 45),
+              text = element_text(family = "Palatino"))
+
 ```
 
 ```{r, google trend news}
@@ -132,10 +142,6 @@ ggplot(data = newstrends08_20, mapping = aes(x = Year, color = )) +
  # Terrorism = col_double()
 # ))
 ```
-
-
-
-
 
 
 
