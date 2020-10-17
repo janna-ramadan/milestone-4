@@ -19,7 +19,7 @@ library(shiny)
 ```
 
 
-```{r, data-set-up}
+```{r, hate-crime-data-set-up}
 # load datasets
 
 
@@ -55,7 +55,7 @@ fbi2012 <- read_excel("rawdata/fbi2012.xls") %>%
 
 ```
 
-```{r, making-one-data-set }
+```{r, hate-crime-making-one-data-set }
 fbi78 <- full_join(fbi2018, fbi2017) %>%
   #  as.data.frame(apply(as.numeric)) %>%
   rename(bias_motivation = "Table 1", count = "...4") %>%
@@ -86,18 +86,18 @@ fbi12_18 <- full_join(fbi2_4, fbi5_8)
   fbicompiled <- fbi12_18 %>%
     mutate("count" = as.numeric(count)) %>%
     arrange(desc(count))
-  #find a wya to set cols earlier while merging
+  #find away to set cols earlier while merging
     
 write_csv(fbicompiled, "fbicompiled.csv")
     
   
 ```
 
-```{r}
+```{r, hate-crime-graph}
 
       ggplot(data = fbicompiled, mapping = aes(x = year, y = count, color = bias_motivation)) +
         geom_point(size = 2) +
-        theme_grey() +
+        theme_bw() +
         labs(title = "2012-2018 Count of Hate Crimes\n Motivated By Anti-Muslim or \nAnti-Arab Sentiment",
              subtitle = "Counts victims of hate crimes \nwithin the United States",
              x = "Year",
@@ -111,7 +111,7 @@ write_csv(fbicompiled, "fbicompiled.csv")
 
 ```
 
-```{r, google trend news}
+```{r, google-trend-news-data}
 newstrends08_20 <- read_csv("rawdata/googletrends.csv")
  #                           cols(
 #  Month = col_double(),
@@ -120,10 +120,44 @@ newstrends08_20 <- read_csv("rawdata/googletrends.csv")
 #  `Month (Name)` = col_character(),
  # Muslim = col_double(),
   # Terrorism = col_double()))
- # I know it needs cols(), but whenever I add cols it gives me 
+ # I know it needs cols(), but whenever I add cols it gives me an error
 
-ggplot(data = newstrends08_20, mapping = aes(x = Year, color = )) +
-  geom_histogram()
+newstrends08_20 <- newstrends08_20 %>%
+  pivot_longer(cols = c(Muslim, Terrorism), 
+               names_to = "key_word") %>%
+  rename(Date = Month)
+
+newstrendbyyear <- newstrends08_20 %>%
+  group_by(Year, key_word) %>%
+  summarize(total_hits = sum(value))
+
+muslimtrendbyyear <- newstrendbyyear %>%
+  filter(key_word == "Muslim")
+
+terrorismtrendbyyear <- newstrendbyyear %>%
+  filter(key_word == "Terrorism")
+
+write_csv(newstrends08_20, "newstrends.csv")
+write_csv(muslimtrendbyyear, "muslimtrendbyyear.csv")
+write_csv(terrorismtrendbyyear, "terrorismtrendbyyear.csv")
+
+#terrorism search trend graph
+ggplot(data = terrorismtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
+  geom_line() +
+  theme(axis.text.x = element_text(size = 5, angle = 90),
+              text = element_text(family = "Palatino"))
+
+#Muslim search trend graph
+ggplot(data = muslimtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
+  geom_line() +
+  theme(axis.text.x = element_text(size = 5, angle = 90),
+              text = element_text(family = "Palatino"))
+
+#Compared data grapg
+ggplot(data = newstrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
+  geom_line() +
+  theme(axis.text.x = element_text(size = 5, angle = 90),
+              text = element_text(family = "Palatino"))
 ```
 
 

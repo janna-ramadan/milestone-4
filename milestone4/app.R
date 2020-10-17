@@ -28,14 +28,14 @@ ui <- navbarPage(
              I am studying the impact social media, news sources, and public 
              officials (through legislation) have on national sentiments toward
              Muslims, Arabs, and South Asians. 
-             br()
+             
              For this Milestone, I have compiled data on hate crimes from the
              FBI. I also gathered Google News search trend data and attempted 
              to learn how to pull data from Twitter API. The Twitter API data
              is a work in progress as the data is limited to recent searches
              and it's not clear what key words identify tweets with negative
              sentiments. 
-             br()
+            
              Data from Twitter will represent social media popular rhetoric,
              which I will have to measure in accordance with public interaction
              wil the tweets. Thus far, Google's trends on News searchs with the
@@ -52,20 +52,20 @@ ui <- navbarPage(
              read through speeches and identify frequency of words and measure
              sentiment as positive or negative, but that is honestly a last 
              resort move because I don't know enough code to do that yet.
-             br()
-             The URL to my rep is https://github.com/janna-ramadan/milestone-4"),
+            
+             You can acces my GitHub repo is",
+                   tags$a(href = "https://github.com/janna-ramadan/milestone-4", "here.")),
+               
              h3("About Me"),
              p("Hello, my name is Janna Ramadan and I am a sophomore at Harvard
              College studying Government and Near Eastern Languages and 
              Civilizations. This is my Milestone 4 for my final project in the 
-             Gov50 Data Science class. 
-             br()
-             You can reach me at janna_ramadan@college.harvard.edu.")), 
+             Gov50 Data Science class. You can reach me at janna_ramadan@college.harvard.edu.")), 
     
     
     
     tabPanel("Model",
-             p("To be filled in")),
+             p("Will enter google news trend graphs in here next week.")),
     #fluidPage(
     # titlePanel("Model Title"),
     # sidebarLayout(
@@ -102,7 +102,10 @@ ui <- navbarPage(
                The FBI does not track hate crimes motivated by Anti-South Asian
                sentiments, which it groups into the broader Anti-Asian hate 
                crimes. As such, I am unable to measure the rate of hate 
-               crimes towards South Asians."),
+               crimes towards South Asians. In the U.S. Census Arabs are 
+               considered White, and it was not until 2014 that the FBI began
+               to collect separate data on hate crimes motivated by Anti-Arab
+               sentiment, which is why the data starts in 2014."),
              br(),
              plotOutput("fbicompiled"), 
              
@@ -118,7 +121,7 @@ server <- function(input, output) {
         
         ggplot(data = fbicompiled, mapping = aes(x = year, y = count, color = bias_motivation)) +
             geom_point(size = 2) +
-            theme_grey() +
+            theme_linedraw() +
             labs(title = "2012-2018 Count of Hate Crimes Motivated By Anti-Muslim or Anti-Arab Sentiment",
                  subtitle = "Counts victims of hate crimes within the United States",
                  x = "Year",
@@ -133,9 +136,6 @@ server <- function(input, output) {
     })
     
 }
-
-
-
 
 
 # Run the application
