@@ -11,7 +11,9 @@ library(shiny)
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-
+library(lubridate)
+library(janitor)
+library(gganimate)
 
 # Define UI for application 
 ui <- navbarPage(
@@ -54,36 +56,33 @@ ui <- navbarPage(
              resort move because I don't know enough code to do that yet.
             
              You can acces my GitHub repo is",
-                   tags$a(href = "https://github.com/janna-ramadan/milestone-4", "here.")),
+                   tags$a(href = "https://github.com/janna-ramadan/milestone-4"
+                          , "here.")),
                
              h3("About Me"),
              p("Hello, my name is Janna Ramadan and I am a sophomore at Harvard
              College studying Government and Near Eastern Languages and 
              Civilizations. This is my Milestone 4 for my final project in the 
-             Gov50 Data Science class. You can reach me at janna_ramadan@college.harvard.edu.")), 
+             Gov50 Data Science class. You can reach me at 
+               janna_ramadan@college.harvard.edu.")), 
     
     
     
-    tabPanel("Model",
-             p("Will enter google news trend graphs in here next week.")),
-    #fluidPage(
-    # titlePanel("Model Title"),
-    # sidebarLayout(
-    # sidebarPanel(
-    #  textInput("name", "What's your name?"),  
-    #  textOutput("greeting"),
-    # sliderInput("year", label="When were you born?",   
-    #             min = 1960, max = 2020, value = 2000),  
-    # textOutput("AgeCalc"),
-    # selectInput(
-    #    "plot_type",
-    #    "Plot Type",
-    #    c("Option A" = "a", "Option B" = "b")
-    
-    #   )),
-    # mainPanel())
-    # )),
-    
+    tabPanel("Media",
+             titlePanel(strong("Media")),
+             h3("News Trends: Displaying Common Public Correlation Between 
+                Muslims and Terrorism"), 
+             p("Even without empirical data, it is obvious to those living in 
+               America that a stereotype exists connecting Muslims with 
+               terrorism. To assessing the news media's role in perpetuating 
+               that, it is important to start with the trends of public 
+               interest. The graph below shows the relative interest in the
+               term 'Muslim' and 'Terrorism' from Google News search trends. 
+               The values are relative, meaning that it measures the popularity
+               of the term in consideration of the frequency of searches with 
+               that term included in the past."),
+            br(), 
+            plotOutput("news")),
     
     
     tabPanel("Public Opinion",
@@ -107,9 +106,7 @@ ui <- navbarPage(
                to collect separate data on hate crimes motivated by Anti-Arab
                sentiment, which is why the data starts in 2014."),
              br(),
-             plotOutput("fbicompiled"), 
-             
-             ))
+             plotOutput("fbicompiled")))
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -119,23 +116,56 @@ server <- function(input, output) {
     
     output$fbicompiled <- renderPlot({
         
-        ggplot(data = fbicompiled, mapping = aes(x = year, y = count, color = bias_motivation)) +
+        ggplot(data = fbicompiled, mapping = aes(x = year, 
+                                                 y = count, 
+                                                 color = bias_motivation)) +
             geom_point(size = 2) +
             theme_linedraw() +
-            labs(title = "2012-2018 Count of Hate Crimes Motivated By Anti-Muslim or Anti-Arab Sentiment",
-                 subtitle = "Counts victims of hate crimes within the United States",
+            labs(title = "2012-2018 Count of Hate Crimes Motivated By 
+                 Anti-Muslim or Anti-Arab Sentiment",
+                 subtitle = "Counts victims of hate crimes within the 
+                 United States",
                  x = "Year",
                  y = "Victim Count",
                  caption = "Source: FBI Hate Crimes") +
             scale_color_manual(name = "Hate Crime Motivation",
-                               labels = c("Anti-Arab Sentiment", "Anti-Muslim Sentiment"),
+                               labels = c("Anti-Arab Sentiment", 
+                                          "Anti-Muslim Sentiment"),
                                values = c("olivedrab3", "lightskyblue2")) +
             theme(axis.text.x = element_text(size = 10, angle = 45),
                   text = element_text(family = "Palatino"))
         
-    })
+    }) }
+
+server <- function(input, output) {
+# news <- function(input, output) {
     
-}
+    newstrends0820 <- read_csv("milestone4/newstrends0820.csv")
+
+    output$newstrends0820 <- renderPlot({
+    
+    ggplot(data = newstrends0820, mapping = aes(x = date, 
+                                                 y = value, 
+                                                 color = key_word)) +
+        geom_line() +
+        transition_reveal(date) +
+        scale_x_date(date_labels = "%b/%Y", date_breaks = "year") +
+        theme(axis.text.x = element_text(size = 5, angle = 90),
+              text = element_text(family = "Palatino")) +
+        scale_color_manual(values = c("olivedrab3", "brown2"), 
+                           labels = c("Muslim", "Terorrism"), 
+                           name = "Key Word Search Term") +
+        labs(title = "Level of Search Interest in the Topic 'Muslim' and 
+                 Search Term 'Terrorist'",
+             subtitle = "Values Based on Google News Search Trends Between 
+                 2008 and 2020", 
+             x = "Date", 
+             y = "Relative Interest (with respect to peak search 
+                 frequency)", 
+             caption = "Source: Google News Trends")
+    
+})
+} 
 
 
 # Run the application

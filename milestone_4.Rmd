@@ -112,52 +112,53 @@ write_csv(fbicompiled, "fbicompiled.csv")
 ```
 
 ```{r, google-trend-news-data}
-newstrends08_20 <- read_csv("rawdata/googletrends.csv")
- #                           cols(
-#  Month = col_double(),
- # Year = col_double(),
-  #Month_1 = col_double(),
-#  `Month (Name)` = col_character(),
- # Muslim = col_double(),
-  # Terrorism = col_double()))
- # I know it needs cols(), but whenever I add cols it gives me an error
+library(lubridate)
+library(janitor)
+library(ggplot2)
+library(gganimate)
+
+
+#data download and clean up
+newstrends08_20 <- read_csv("rawdata/googletrends.csv",
+  col_types = list(
+  Month = col_character(),
+  Year = col_double(),
+  Month_1 = col_double(),
+ `Month (Name)` = col_character(),
+ Muslim = col_double(),
+   Terrorism = col_double())) %>%  
+  clean_names() %>%
+  mutate(month = ymd(month, truncated = 1)) 
 
 newstrends08_20 <- newstrends08_20 %>%
-  pivot_longer(cols = c(Muslim, Terrorism), 
+  pivot_longer(cols = c(muslim, terrorism), 
                names_to = "key_word") %>%
-  rename(Date = Month)
+  rename(date = month) %>%
+  rename(month = month_1)
 
-newstrendbyyear <- newstrends08_20 %>%
-  group_by(Year, key_word) %>%
-  summarize(total_hits = sum(value))
+# makes csv of cleaned data
+write_csv(newstrends08_20, "newstrends0820.csv")
 
-muslimtrendbyyear <- newstrendbyyear %>%
-  filter(key_word == "Muslim")
-
-terrorismtrendbyyear <- newstrendbyyear %>%
-  filter(key_word == "Terrorism")
-
-write_csv(newstrends08_20, "newstrends.csv")
-write_csv(muslimtrendbyyear, "muslimtrendbyyear.csv")
-write_csv(terrorismtrendbyyear, "terrorismtrendbyyear.csv")
-
-#terrorism search trend graph
-ggplot(data = terrorismtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
+#graph of trends
+ggplot(data = newstrends08_20, mapping = aes(x = date, 
+                                              y = value, 
+                                              color = key_word)) +
   geom_line() +
+ transition_reveal(date) +
+  scale_x_date(date_labels = "%b/%Y", date_breaks = "year") +
   theme(axis.text.x = element_text(size = 5, angle = 90),
-              text = element_text(family = "Palatino"))
+              text = element_text(family = "Palatino")) +
+  scale_color_manual(values = c("olivedrab3", "brown2"), labels = c("Muslim", "Terorrism"), name = "Key Word Search Term") +
+  labs(title = "Level of Search Interest in the Topic 'Muslim' and Search Term 'Terrorist'",
+       subtitle = "Values Based on Google News Search Trends Between 2008 and 2020", 
+       x = "Date", 
+       y = "Relative Interest (with respect to peak search frequency)", 
+       caption = "Source: Google News Trends")
 
-#Muslim search trend graph
-ggplot(data = muslimtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
-  geom_line() +
-  theme(axis.text.x = element_text(size = 5, angle = 90),
-              text = element_text(family = "Palatino"))
+# is this an accurate measure of the news? if it's news searches
+# how do you list multiple graphs in shiny
+# twitter???
 
-#Compared data grapg
-ggplot(data = newstrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
-  geom_line() +
-  theme(axis.text.x = element_text(size = 5, angle = 90),
-              text = element_text(family = "Palatino"))
 ```
 
 
@@ -177,6 +178,44 @@ ggplot(data = newstrendbyyear , mapping = aes(x = Year, y = total_hits, color = 
 # ))
 ```
 
+
+```{r}
+
+# newstrend breakdown by year data - unnecessary for now 
+# newstrendbyyear <- newstrends08_20 %>%
+#   group_by(year, key_word) %>%
+#   summarize(total_hits = sum(value))
+# 
+# muslimtrendbyyear <- newstrendbyyear %>%
+#   filter(key_word == "Muslim")
+# 
+# terrorismtrendbyyear <- newstrendbyyear %>%
+#   filter(key_word == "Terrorism")
+# 
+# write_csv(newstrends08_20, "newstrends.csv")
+# write_csv(muslimtrendbyyear, "muslimtrendbyyear.csv")
+# write_csv(terrorismtrendbyyear, "terrorismtrendbyyear.csv")
+# 
+# #terrorism search trend graph
+# ggplot(data = terrorismtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
+#   geom_line() +
+#   theme(axis.text.x = element_text(size = 5, angle = 90),
+#               text = element_text(family = "Palatino"))
+# 
+# #Muslim search trend graph
+# ggplot(data = muslimtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
+#   geom_line() +
+#   theme(axis.text.x = element_text(size = 5, angle = 90),
+#               text = element_text(family = "Palatino"))
+# 
+# #Compared data grapg
+# ggplot(data = newstrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
+#   geom_line() +
+#   theme(axis.text.x = element_text(size = 5, angle = 90),
+#               text = element_text(family = "Palatino"))
+
+#attempt at long term trends
+```
 
 
 
@@ -204,5 +243,26 @@ muslimradicals_tweets <- search_tweets(type = "recent",
  # app = appname,
  # consumer_key = key,
  # consumer_secret = secretkey)
+```
+
+```{r}
+# shiny notes
+    #fluidPage(
+    # titlePanel("Model Title"),
+    # sidebarLayout(
+    # sidebarPanel(
+    #  textInput("name", "What's your name?"),  
+    #  textOutput("greeting"),
+    # sliderInput("year", label="When were you born?",   
+    #             min = 1960, max = 2020, value = 2000),  
+    # textOutput("AgeCalc"),
+    # selectInput(
+    #    "plot_type",
+    #    "Plot Type",
+    #    c("Option A" = "a", "Option B" = "b")
+    
+    #   )),
+    # mainPanel())
+    # )),
 ```
 
