@@ -266,3 +266,17 @@ muslimradicals_tweets <- search_tweets(type = "recent",
     # )),
 ```
 
+```{r}
+# section questions
+# - how do i add columns bc I found more data from the fbi on hate crime stats : 
+#   https://www.pewresearch.org/fact-tank/2017/11/15/assaults-against-muslims-in-u-s-surpass-2001-level/
+#   
+# what do i do about twitter - how do i measure it
+# 
+# how do I include multipe putput graphs - done!
+# how to save the gif to take less space loading - needs outfile, animate, etc. 
+# less favorable to animation to diff countries, unless u save gifs at once and load
+# future q - how you load 
+  
+```
+

@@ -14,6 +14,11 @@ library(dplyr)
 library(lubridate)
 library(janitor)
 library(gganimate)
+library(glue)
+library(gifski)
+
+fbicompiled <- read_csv("fbicompiled.csv")
+newstrends0820 <- read_csv("newstrends0820.csv")
 
 # Define UI for application 
 ui <- navbarPage(
@@ -29,16 +34,16 @@ ui <- navbarPage(
              communities and public opinion towards them will also be included.
              I am studying the impact social media, news sources, and public 
              officials (through legislation) have on national sentiments toward
-             Muslims, Arabs, and South Asians. 
-             
-             For this Milestone, I have compiled data on hate crimes from the
+             Muslims, Arabs, and South Asians."),
+             br(),
+             p("For this Milestone, I have compiled data on hate crimes from the
              FBI. I also gathered Google News search trend data and attempted 
              to learn how to pull data from Twitter API. The Twitter API data
              is a work in progress as the data is limited to recent searches
              and it's not clear what key words identify tweets with negative
-             sentiments. 
-            
-             Data from Twitter will represent social media popular rhetoric,
+             sentiments."),
+             br(),
+             p("Data from Twitter will represent social media popular rhetoric,
              which I will have to measure in accordance with public interaction
              wil the tweets. Thus far, Google's trends on News searchs with the
              key words 'Muslim' and 'Terrorism' is serving as a proxy for the
@@ -53,9 +58,9 @@ ui <- navbarPage(
              the President or Congress. I may have to make a function that can
              read through speeches and identify frequency of words and measure
              sentiment as positive or negative, but that is honestly a last 
-             resort move because I don't know enough code to do that yet.
-            
-             You can acces my GitHub repo is",
+             resort move because I don't know enough code to do that yet."),
+             br(),
+             p("You can acces my GitHub repo is",
                    tags$a(href = "https://github.com/janna-ramadan/milestone-4"
                           , "here.")),
                
@@ -81,8 +86,8 @@ ui <- navbarPage(
                The values are relative, meaning that it measures the popularity
                of the term in consideration of the frequency of searches with 
                that term included in the past."),
-            br(), 
-            plotOutput("news")),
+            br(),
+            imageOutput("newstrends0820")),
     
     
     tabPanel("Public Opinion",
@@ -112,8 +117,6 @@ ui <- navbarPage(
 server <- function(input, output) {
     
     
-    fbicompiled <- read_csv("fbicompiled.csv")
-    
     output$fbicompiled <- renderPlot({
         
         ggplot(data = fbicompiled, mapping = aes(x = year, 
@@ -135,37 +138,36 @@ server <- function(input, output) {
             theme(axis.text.x = element_text(size = 10, angle = 45),
                   text = element_text(family = "Palatino"))
         
-    }) }
-
-server <- function(input, output) {
-# news <- function(input, output) {
+    })
     
-    newstrends0820 <- read_csv("milestone4/newstrends0820.csv")
-
-    output$newstrends0820 <- renderPlot({
-    
-    ggplot(data = newstrends0820, mapping = aes(x = date, 
-                                                 y = value, 
-                                                 color = key_word)) +
+    output$newstrends0820 <- renderImage({
+        outfile <- tempfile(fileext='.gif')
+        newsplot <- ggplot(data = newstrends0820, mapping = aes(x = date,
+                                                y = value,
+                                                color = key_word)) +
         geom_line() +
         transition_reveal(date) +
         scale_x_date(date_labels = "%b/%Y", date_breaks = "year") +
         theme(axis.text.x = element_text(size = 5, angle = 90),
               text = element_text(family = "Palatino")) +
-        scale_color_manual(values = c("olivedrab3", "brown2"), 
-                           labels = c("Muslim", "Terorrism"), 
+        scale_color_manual(values = c("olivedrab3", "brown2"),
+                           labels = c("Muslim", "Terorrism"),
                            name = "Key Word Search Term") +
-        labs(title = "Level of Search Interest in the Topic 'Muslim' and 
+        labs(title = "Level of Search Interest in the Topic 'Muslim' and
                  Search Term 'Terrorist'",
-             subtitle = "Values Based on Google News Search Trends Between 
-                 2008 and 2020", 
-             x = "Date", 
-             y = "Relative Interest (with respect to peak search 
-                 frequency)", 
+             subtitle = "Values Based on Google News Search Trends Between
+                 2008 and 2020",
+             x = "Date",
+             y = "Relative Interest (with respect to peak search
+                 frequency)",
              caption = "Source: Google News Trends")
+        animate(newsplot, nframes = 75, render = gifski_renderer("outfile.gif"))
+        list(src = "outfile.gif", contentType = "image/gif")
     
-})
-} 
+    })
+    
+    
+}
 
 
 # Run the application
