@@ -5,8 +5,9 @@ account: jannaramadan
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3035405
-bundleId: 3750626
+bundleId: 3785074
 url: https://jannaramadan.shinyapps.io/milestone4/
-when: 1602889484.91143
+when: 1603745479.04383
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: muslimtrendbyyear.csv|newstrends.csv|terrorismtrendbyyear.csv

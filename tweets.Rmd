@@ -1,0 +1,41 @@
+---
+title: "twitter code"
+author: "Janna Ramadan"
+date: "11/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(rtweet)
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(gganimate)
+library(shiny)
+```
+
+
+```{r}
+appname <- "muslimopinion"
+  
+key <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
+
+secretkey <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
+
+muslim_extremist_search_string <- c("muslim extremist", "muslim terrorist", "muslim radical")
+
+muslim_tweets <- search_tweets(type = "recent", 
+                                       q = "muslim",
+                               n = 100, 
+                               include_rts = FALSE,
+                               "lang:en",
+                               geocode = lookup_coords("usa"))  %>%
+  select("created_at", "text", "hashtags")
+
+  saveRDS(muslim_tweets, file = paste0("muslim_tweets_",Sys.Date(),".RDS"))
+```
+

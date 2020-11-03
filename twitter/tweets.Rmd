@@ -1,0 +1,92 @@
+---
+title: "twitter code"
+author: "Janna Ramadan"
+date: "11/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(rtweet)
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(gganimate)
+library(shiny)
+```
+
+
+```{r}
+appname <- "muslimopinion"
+  
+key <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
+
+secretkey <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
+
+muslim_extremist_search_string <- c("muslim extremist", "muslim terrorist", "muslim radical")
+
+# muslim only tweets
+muslim_tweets <- search_tweets(type = "recent", 
+                                       q = "muslim",
+                               n = 1000, 
+                               include_rts = FALSE,
+                               "lang:en",
+                               geocode = lookup_coords("usa"))  %>%
+  select("created_at", "text", "hashtags")
+
+  saveRDS(muslim_tweets, file = paste0("muslim_tweets_",Sys.Date(),".RDS"))
+  
+# Muslim, Arab, South Asian Tweets
+  muslim_arab_southasian_tweets <- search_tweets(type = "recent", 
+                                       q = "arab OR south asian",
+                               n = 1000, 
+                               include_rts = FALSE,
+                               "lang:en",
+                               geocode = lookup_coords("usa"))  %>%
+  select("created_at", "text", "hashtags")
+
+  saveRDS(muslim_arab_southasian_tweets, file = paste0("muslim_arab_southasian_tweets_",Sys.Date(),".RDS"))
+  
+
+# Islam tweets
+islam_tweets <- search_tweets(type = "recent", 
+                                       q = "islam",
+                               n = 1000, 
+                               include_rts = FALSE,
+                               "lang:en",
+                               geocode = lookup_coords("usa"))  %>%
+  select("created_at", "text", "hashtags")
+
+  saveRDS(islam_tweets, file = paste0("islam_tweets_",Sys.Date(),".RDS"))
+  
+# Anti-democratic tweets
+antidem_tweets <- search_tweets(type = "recent", 
+                                       q = "anti-democratic",
+                               n = 1000, 
+                               include_rts = FALSE,
+                               "lang:en",
+                               geocode = lookup_coords("usa"))  %>%
+  select("created_at", "text", "hashtags")
+
+  saveRDS(antidem_tweets, file = paste0("antidem_tweets_",Sys.Date(),".RDS"))
+
+```
+
+```{r, public official tweets}
+# run once a week
+
+
+trump_tweets <- search_tweets(type = "recent", 
+                                       q = "muslim",
+                               n = 1000, 
+                               include_rts = FALSE,
+                               "lang:en",
+                               geocode = lookup_coords("usa"))  %>%
+  select("created_at", "text", "hashtags")
+
+  saveRDS(muslim_tweets, file = paste0("muslim_tweets_",Sys.Date(),".RDS"))
+```
+

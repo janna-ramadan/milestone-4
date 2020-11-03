@@ -219,6 +219,7 @@ ggplot(data = newstrends08_20, mapping = aes(x = date,
 
 
 
+
 ```{r, twitter attempt content}
 appname <- "muslimopinion"
   
@@ -236,8 +237,13 @@ muslimradicals_tweets <- search_tweets(type = "recent",
                                geocode = lookup_coords("usa"))  %>%
   select("created_at", "text", "hashtags")
 
+
+
 # https://en.wikipedia.org/wiki/Geographic_center_of_the_contiguous_United_States
 # shows that Lebanon, kensas is the midpoint of the continuous US.
+
+
+# sentiment r package https://cran.r-project.org/web/packages/sentimentr/sentimentr.pdf
 
 #twitter_token <- create_token(
  # app = appname,
