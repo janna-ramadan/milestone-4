@@ -77,7 +77,7 @@ antidem_tweets <- search_tweets(type = "recent",
 
 ```{r, public official tweets}
 # run once a week
-
+# don't need
 
 trump_tweets <- search_tweets(type = "recent", 
                                        q = "muslim",
@@ -88,5 +88,37 @@ trump_tweets <- search_tweets(type = "recent",
   select("created_at", "text", "hashtags")
 
   saveRDS(muslim_tweets, file = paste0("muslim_tweets_",Sys.Date(),".RDS"))
+```
+
+```{r}
+
+# don't run every time
+
+filelist <- tweets <- list.files(pattern = "*.RDS")
+
+#i in = sets lengths of i; how many files to bound them all
+
+tweeteater <- function(filelist) {
+  for(i in 1:length(filelist)){
+  subfile = readRDS(filelist[i]) %>%
+    mutate(dataset = filelist[i])
+    if(i == 1){
+      final <- subfile 
+    }
+    if(i > 1) {
+      final <- bind_rows(final, subfile)
+    }
+  } 
+  
+  return(final)
+  
+}
+
+tweetfile <- tweeteater(filelist) %>%
+  mutate(date = as.Date(created_at)) %>%
+  mutate(filename = str_extract(dataset, ".*(?=_2)"))
+
+# used ? lookahead to get everything before _2 in _2020...
+
 ```
 
