@@ -16,6 +16,9 @@ library(ggplot2)
 library(readr)
 library(gganimate)
 library(shiny)
+library(tidymodels)
+library(rstanarm)
+library(dbplyr)
 ```
 
 
@@ -89,17 +92,41 @@ fbi12_18 <- full_join(fbi2_4, fbi5_8)
   #find away to set cols earlier while merging
     
 write_csv(fbicompiled, "fbicompiled.csv")
-    
+  
+# Externally downloaded the data so that I could manually add data points from
+# 1996 - 2011. Below is complete hate crime data set.
+
+fbi_compiled_complete <- read_csv("fbi_compiled_complete.csv",
+col_types = list(
+  bias_motivation = col_character(),
+  count = col_double(),
+  year = col_character()
+))
+
+fbi_compiled_complete %>%
+  filter(bias_motivation == "Anti-Islamic (Muslim)") %>%
+  mutate(mean = mean(count))
+
+# mean Anti-Islamic (Muslim) hate crimes is 163.7826 
+
+fbi_compiled_complete %>%
+  filter(bias_motivation == "Anti-Arab") %>%
+  mutate(mean = mean(count))
+
+# mean Anti-Islamic (Muslim) hate crimes is 84 
+
   
 ```
 
 ```{r, hate-crime-graph}
 
-      ggplot(data = fbicompiled, mapping = aes(x = year, y = count, color = bias_motivation)) +
+      ggplot(data = fbi_compiled_complete, mapping = aes(x = year, y = count, color = bias_motivation)) +
         geom_point(size = 2) +
+        geom_hline(yintercept = 84, col = "olivedrab3", lty = "dashed") +
+        geom_hline(yintercept = 163.78, col = "lightskyblue2", lty = "dashed") +
         theme_bw() +
-        labs(title = "2012-2018 Count of Hate Crimes\n Motivated By Anti-Muslim or \nAnti-Arab Sentiment",
-             subtitle = "Counts victims of hate crimes \nwithin the United States",
+        labs(title = "2012-2018 Count of Hate Crimes Motivated By Anti-Muslim or \nAnti-Arab Sentiment",
+             subtitle = "Counts victims of hate crimes within \nthe United States",
              x = "Year",
              y = "Victim Count",
              caption = "Source: FBI Hate Crimes") +
@@ -163,125 +190,9 @@ ggplot(data = newstrends08_20, mapping = aes(x = date,
 
 
 ```{r}
-
-#ggplot(data = newstrends08_20, mapping = aes(x = months.Date())) +
-  #geom_histogram()
-
-#, 
- #                           cols(
- # Month = col_character(),
- # Year = col_double(),
- # Month_1 = col_double(),
- # `Month (Name)` = col_character(),
- # Muslim = col_double(),
- # Terrorism = col_double()
-# ))
+fit_hatecrimes <- stan_glm(data = fbi_compiled_complete,
+                  bias_motivation ~ count + year,
+                  family = gaussian, 
+                  refresh = 0)
 ```
 
-
-```{r}
-
-# newstrend breakdown by year data - unnecessary for now 
-# newstrendbyyear <- newstrends08_20 %>%
-#   group_by(year, key_word) %>%
-#   summarize(total_hits = sum(value))
-# 
-# muslimtrendbyyear <- newstrendbyyear %>%
-#   filter(key_word == "Muslim")
-# 
-# terrorismtrendbyyear <- newstrendbyyear %>%
-#   filter(key_word == "Terrorism")
-# 
-# write_csv(newstrends08_20, "newstrends.csv")
-# write_csv(muslimtrendbyyear, "muslimtrendbyyear.csv")
-# write_csv(terrorismtrendbyyear, "terrorismtrendbyyear.csv")
-# 
-# #terrorism search trend graph
-# ggplot(data = terrorismtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
-#   geom_line() +
-#   theme(axis.text.x = element_text(size = 5, angle = 90),
-#               text = element_text(family = "Palatino"))
-# 
-# #Muslim search trend graph
-# ggplot(data = muslimtrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
-#   geom_line() +
-#   theme(axis.text.x = element_text(size = 5, angle = 90),
-#               text = element_text(family = "Palatino"))
-# 
-# #Compared data grapg
-# ggplot(data = newstrendbyyear , mapping = aes(x = Year, y = total_hits, color = key_word)) +
-#   geom_line() +
-#   theme(axis.text.x = element_text(size = 5, angle = 90),
-#               text = element_text(family = "Palatino"))
-
-#attempt at long term trends
-```
-
-
-
-
-```{r, twitter attempt content}
-appname <- "muslimopinion"
-  
-key <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
-
-secretkey <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
-
-muslim_extremist_search_string <- c("muslim extremist", "muslim terrorist", "muslim radical")
-
-muslimradicals_tweets <- search_tweets(type = "recent", 
-                                       q = "muslim terrorist",
-                               n = 100, 
-                               include_rts = FALSE,
-                               "lang:en",
-                               geocode = lookup_coords("usa"))  %>%
-  select("created_at", "text", "hashtags")
-
-
-
-# https://en.wikipedia.org/wiki/Geographic_center_of_the_contiguous_United_States
-# shows that Lebanon, kensas is the midpoint of the continuous US.
-
-
-# sentiment r package https://cran.r-project.org/web/packages/sentimentr/sentimentr.pdf
-
-#twitter_token <- create_token(
- # app = appname,
- # consumer_key = key,
- # consumer_secret = secretkey)
-```
-
-```{r}
-# shiny notes
-    #fluidPage(
-    # titlePanel("Model Title"),
-    # sidebarLayout(
-    # sidebarPanel(
-    #  textInput("name", "What's your name?"),  
-    #  textOutput("greeting"),
-    # sliderInput("year", label="When were you born?",   
-    #             min = 1960, max = 2020, value = 2000),  
-    # textOutput("AgeCalc"),
-    # selectInput(
-    #    "plot_type",
-    #    "Plot Type",
-    #    c("Option A" = "a", "Option B" = "b")
-    
-    #   )),
-    # mainPanel())
-    # )),
-```
-
-```{r}
-# section questions
-# - how do i add columns bc I found more data from the fbi on hate crime stats : 
-#   https://www.pewresearch.org/fact-tank/2017/11/15/assaults-against-muslims-in-u-s-surpass-2001-level/
-#   
-# what do i do about twitter - how do i measure it
-# 
-# how do I include multipe putput graphs - done!
-# how to save the gif to take less space loading - needs outfile, animate, etc. 
-# less favorable to animation to diff countries, unless u save gifs at once and load
-# future q - how you load 
-  
-```
