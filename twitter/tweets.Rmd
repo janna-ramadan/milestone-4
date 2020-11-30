@@ -241,7 +241,7 @@ tweetfile_clean %>%
   top_n(20) %>%
   mutate(word = reorder(word, n)) %>%
   ggplot(mapping = aes(x = word, y = n)) +
-  geom_col() +
+  geom_col(fill = "slategray2") +
   xlab(NULL) +
   coord_flip() +
   theme_minimal() +
@@ -537,5 +537,22 @@ tweet_aggregate_sentiment %>%
   theme_bw() +
   theme(text = element_text(family = "Palatino"))  
 
+```
+
+```{r, write csv for data imported to shiny}
+
+write_csv(tweetfile_clean, "tweetfile_clean.csv")
+write_csv(tweetfile_clean_muslim, "tweetfile_clean_muslim.csv")
+write_csv(tweetfile_clean_islam, "tweetfile_clean_islam.csv")
+write_csv(tweetfile_clean_arab_sa, "tweetfile_clean_arab_sa.csv")
+write_csv(tweetfile_clean_antidem, "tweetfile_clean_antidem.csv")
+write_csv(tweetfile_clean_ethnic, "tweetfile_clean_ethnic.csv")
+
+write_csv(tweet_muslim_sentiment, "tweetfile_muslim_sentiment.csv")
+write_csv(tweet_islam_sentiment, "tweetfile_islam_sentiment.csv")
+write_csv(tweet_arab_sa_sentiment, "tweetfile_arab_sa_sentiment.csv")
+write_csv(tweet_antidem_sentiment, "tweetfile_antidem_sentiment.csv")
+write_csv(tweet_ethnic_sentiment, "tweetfile_ethnic_sentiment.csv")
+write_csv(tweet_aggregate_sentiment, "tweetfile_aggregate_sentiment.csv")
 ```
 

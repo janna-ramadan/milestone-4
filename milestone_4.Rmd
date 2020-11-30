@@ -128,7 +128,7 @@ fbi_compiled_complete %>%
         geom_hline(yintercept = 84, col = "olivedrab3", lty = "dashed") +
         geom_hline(yintercept = 163.78, col = "lightskyblue2", lty = "dashed") +
         theme_bw() +
-        labs(title = "2012-2018 Count of Hate Crimes Motivated By Anti-Muslim or \nAnti-Arab Sentiment",
+        labs(title = "1996-2018 Count of Hate Crimes Motivated By Anti-Muslim or \nAnti-Arab Sentiment",
              subtitle = "Counts victims of hate crimes within \nthe United States",
              x = "Year",
              y = "Victim Count",
