@@ -19,6 +19,9 @@ library(shiny)
 library(tidymodels)
 library(rstanarm)
 library(dbplyr)
+library(lubridate)
+library(janitor)
+
 ```
 
 
@@ -139,11 +142,6 @@ fbi_compiled_complete %>%
 ```
 
 ```{r, google-trend-news-data}
-library(lubridate)
-library(janitor)
-library(ggplot2)
-library(gganimate)
-
 
 #data download and clean up
 newstrends08_20 <- read_csv("rawdata/googletrends.csv",
@@ -191,8 +189,40 @@ ggplot(data = newstrends08_20, mapping = aes(x = date,
 
 ```{r}
 fit_hatecrimes <- stan_glm(data = fbi_compiled_complete,
-                  bias_motivation ~ count + year,
+                  count ~ bias_motivation -1,
                   family = gaussian, 
-                  refresh = 0)
+                  refresh = 0) 
+
+print(fit_hatecrimes, digits = 3)
+
+fit_newstrends <- stan_glm(data = newstrends08_20,
+                  value ~ key_word + date -1,
+                  family = gaussian, 
+                  refresh = 0) %>%
+  as_tibble()
+
+print(fit_newstrends, digits = 3)
+```
+
+```{r}
+posterior_predict(fit_hatecrimes, newdata = fit_newstrends) %>%
+  as_tibble() 
+
+```
+
+```{r}
+fbi_compiled_complete
+
+newstest <- newstrends08_20 %>%
+  select(-date, -month, -month_name) %>%
+  mutate(year = as.character(year)) 
+
+test <- full_join(fbi_compiled_complete, newstest) %>%
+  drop_na()
+
+stan_glm(data = test,
+         count ~ bias_motivation + year -1,
+         refresh = 0)
+
 ```
 

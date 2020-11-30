@@ -16,6 +16,7 @@ library(ggplot2)
 library(readr)
 library(gganimate)
 library(shiny)
+library(textdata)
 ```
 
 
@@ -75,21 +76,6 @@ antidem_tweets <- search_tweets(type = "recent",
 
 ```
 
-```{r, public official tweets}
-# run once a week
-# don't need
-
-trump_tweets <- search_tweets(type = "recent", 
-                                       q = "muslim",
-                               n = 1000, 
-                               include_rts = FALSE,
-                               "lang:en",
-                               geocode = lookup_coords("usa"))  %>%
-  select("created_at", "text", "hashtags")
-
-  saveRDS(muslim_tweets, file = paste0("muslim_tweets_",Sys.Date(),".RDS"))
-```
-
 ```{r}
 
 # don't run every time
@@ -119,6 +105,437 @@ tweetfile <- tweeteater(filelist) %>%
   mutate(filename = str_extract(dataset, ".*(?=_2)"))
 
 # used ? lookahead to get everything before _2 in _2020...
+
+```
+
+```{r, unique word counts}
+# for front page - will show the common/unique words that come with each
+# twitter search
+
+# Remmoves http elements 
+tweetfile$stripped_text <- gsub("http\\S+", 
+                                  "",
+                                 tweetfile$text)
+
+# converts the tweets into lowercase, removes punctuation, and adds an id for
+# each tweet.
+# Also removes "stop words" which are words like I, being, have, etc. 
+# They are words not useful in sentiment analysis
+
+tweetfile_clean_muslim <- tweetfile %>%
+  filter(filename == "muslim_tweets") %>%
+  select(stripped_text) %>%
+  unnest_tokens(word, stripped_text) %>%
+  anti_join(stop_words)
+
+tweetfile_clean_arab_sa <- tweetfile %>%
+  filter(filename == "muslim_arab_southasian_tweets") %>%
+  select(stripped_text) %>%
+  unnest_tokens(word, stripped_text) %>%
+  anti_join(stop_words)
+
+tweetfile_clean_islam <- tweetfile %>%
+    filter(filename == "islam_tweets") %>%
+  select(stripped_text) %>%
+  unnest_tokens(word, stripped_text) %>%
+  anti_join(stop_words)
+
+tweetfile_clean_antidem <- tweetfile %>%
+    filter(filename == "antidem_tweets") %>%
+  select(stripped_text) %>%
+  unnest_tokens(word, stripped_text) %>%
+  anti_join(stop_words)
+
+tweetfile_clean <- tweetfile %>%
+  select(stripped_text) %>%
+  unnest_tokens(word, stripped_text) %>%
+  anti_join(stop_words)
+
+tweetfile_clean_ethnic <- tweetfile %>%
+  filter(filename == c("muslim_tweets", "islam_tweets", "muslim_arab_southasian_tweets")) %>%
+  select(stripped_text) %>%
+  unnest_tokens(word, stripped_text) %>%
+  anti_join(stop_words)
+
+# Can see top tweets with this code head(tweetfile_clean_muslim)
+# First look - muslim tweets shows words like hate, condemnation, 
+# jihadwatchers, leaving. and taught. The arab & south asian data and islam
+# data came up with less conclusive data and words that do not have direct
+# ties to islam. antidem data is clearly impacted by the election because 
+# repubican and trump were some of the top words.
+
+```
+
+```{r, top 10 words }
+# The following graphs have the same format. They look at the top 10 most
+# frequent words in the data sets. 
+
+tweetfile_clean_muslim %>%
+  count(word, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word 'Muslim'",
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Count",
+       y = "Unique Words")
+
+tweetfile_clean_arab_sa %>%
+  count(word, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word 'Arab' and 'South Asian",
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Count",
+       y = "Unique Words")
+
+# Key words clearly tied to election
+
+tweetfile_clean_islam %>%
+  count(word, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word 'Islam'",
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Count",
+       y = "Unique Words")
+
+# surprisingly peaceful
+
+tweetfile_clean_antidem %>%
+  count(word, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word 'Anti-Democratic'",
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Count",
+       y = "Unique Words")
+
+# Again, heavily influenced by the election
+
+tweetfile_clean %>%
+  count(word, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Top 10 Most Frequent Words Across Tweets Including \nthe Words 'Muslim, 'Islam', 'Arab', 'South Asian', and 'Anti-Democratic",
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Count",
+       y = "Unique Words")
+# Anti is the top, but it is weighted by anti-democratic. Clearly impacted by
+# the election results and Kamala Harris, the VP-elect
+
+tweetfile_clean_ethnic %>%
+  count(word, sort = TRUE) %>%
+  top_n(20) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Top 10 Most Frequent Words Across Tweets Including \nthe Words 'Muslim, 'Islam', 'Arab', and 'South Asian'",
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Count",
+       y = "Unique Words")
+
+# Shows that anti-democratic did heavily weigh on the word anti-
+```
+
+```{r, sentiment analysis muslim}
+# Used bing analysis - which counts positive and negative words. Trump is coded as positive. 
+
+
+tweet_muslim_sentiment <- tweetfile_clean_muslim %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+tweet_muslim_sentiment %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scale = "free_y")+
+  labs(title = "Sentiment In Tweets Including the Word 'Muslim'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = " ",
+       y = "Contribution to Sentiment") +
+  coord_flip() +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) +
+  scale_fill_manual(values = c("brown2", "olivedrab3")) 
+  
+```
+
+```{r, sentiment analysis islam}
+# Used bing analysis - which counts positive and negative words. Trump is coded as positive. 
+
+tweet_islam_sentiment <- tweetfile_clean_islam %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+tweet_islam_sentiment %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scale = "free_y")+
+  labs(title = "Sentiment In Tweets Including the Word 'Islam'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = " ",
+       y = "Contribution to Sentiment") +
+  coord_flip() +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) +
+  scale_fill_manual(values = c("brown2", "olivedrab3")) 
+```
+
+```{r, sentiment analysis arab and south asian}
+# Used bing analysis - which counts positive and negative words. Trump is coded as positive. 
+
+tweet_arab_sa_sentiment <- tweetfile_clean_arab_sa %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+tweet_arab_sa_sentiment %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scale = "free_y")+
+  labs(title = "Sentiment In Tweets Including the Words 'Arab' and 'South Asian'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = " ",
+       y = "Contribution to Sentiment") +
+  coord_flip() +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) +
+  scale_fill_manual(values = c("brown2", "olivedrab3")) 
+```
+
+```{r, sentiment analysis anti-dem}
+# Used bing analysis - which counts positive and negative words. Trump is coded as positive. 
+
+tweet_antidem_sentiment <- tweetfile_clean_antidem %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+tweet_antidem_sentiment %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scale = "free_y")+
+  labs(title = "Sentiment In Tweets Including the Words 'Anti-Democratic'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = " ",
+       y = "Contribution to Sentiment") +
+  coord_flip() +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) +
+  scale_fill_manual(values = c("brown2", "olivedrab3")) 
+
+```
+
+```{r, sentiment analysis aggregate}
+# Used bing analysis - which counts positive and negative words. Trump is coded as positive. 
+
+tweet_aggregate_sentiment <- tweetfile_clean %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+tweet_aggregate_sentiment %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scale = "free_y")+
+  labs(title = "Sentiment In Tweets Including the Words 'Muslim, 'Islam', 'Arab', 'South Asian', and 'Anti-Democratic'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = " ",
+       y = "Contribution to Sentiment") +
+  coord_flip() +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) +
+  scale_fill_manual(values = c("brown2", "olivedrab3")) 
+
+
+```
+
+```{r, sentiment analysis aggregate ethnic}
+# Used bing analysis - which counts positive and negative words. Trump is coded as positive. 
+
+tweet_ethnic_sentiment <- tweetfile_clean_ethnic %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+tweet_ethnic_sentiment %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(mapping = aes(x = word, y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scale = "free_y") +
+  labs(title = "Sentiment In Tweets Including the Words 'Muslim, 'Islam', 'Arab', and 'South Asian'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = " ",
+       y = "Contribution to Sentiment") +
+  coord_flip() +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) +
+  scale_fill_manual(values = c("brown2", "olivedrab3")) 
+
+
+```
+
+```{r, sentiment numerical}
+
+# Afinn creates a a numerical spectrum of values for sentiment. 0 is neutral. 
+# Positive values are postive sentiments.
+# Negative values are negative sentiments. 
+
+# Numerical spectrum with tweets including the word Muslim
+tweet_muslim_sentiment %>%
+  inner_join(get_sentiments("afinn")) %>%
+  ggplot(mapping = aes(x = value)) +
+  geom_histogram(bins = 30, fill = "lightskyblue") +
+  ylim(0, 500) +
+  labs(title = "Numerical Scale of Sentiment in Tweets Including the Word 'Muslim'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Score",
+       y = "Count") +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) 
+
+# Numerical spectrum with tweets including the word Islam
+
+tweet_islam_sentiment %>%
+  inner_join(get_sentiments("afinn")) %>%
+  ggplot(mapping = aes(x = value)) +
+  geom_histogram(bins = 30, fill = "lightskyblue") +
+  ylim(0, 500) +
+  labs(title = "Numerical Scale of Sentiment in Tweets Including the Word 'Islam'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Score",
+       y = "Count") +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino"))  
+
+# Numerical spectrum with tweets including the words Arab and South Asian
+
+tweet_arab_sa_sentiment %>%
+  inner_join(get_sentiments("afinn")) %>%
+  ggplot(mapping = aes(x = value)) +
+  geom_histogram(bins = 30, fill = "lightskyblue") +
+  ylim(0, 500) +
+  labs(title = "Numerical Scale of Sentiment in Tweets Including the Words 'Arab' and 'South Asian'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Score",
+       y = "Count") +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino"))  
+
+# Numerical spectrum with tweets including the word Anti-Democratic
+
+tweet_antidem_sentiment %>%
+  inner_join(get_sentiments("afinn")) %>%
+  ggplot(mapping = aes(x = value)) +
+  geom_histogram(bins = 30, fill = "lightskyblue") + 
+  ylim(0, 500) +
+  labs(title = "Numerical Scale of Sentiment in Tweets Including the Word 'Anti-Democratic'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Score",
+       y = "Count") +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino"))  
+
+# Numerical spectrum with tweets including the words Muslim, Islam, Arab, 
+# and South Asian
+
+tweet_ethnic_sentiment %>%
+  inner_join(get_sentiments("afinn")) %>%
+  ggplot(mapping = aes(x = value)) +
+  geom_histogram(bins = 30, fill = "lightskyblue") +
+  ylim(0, 500) +
+  labs(title = "Numerical Scale of Sentiment in Tweets Including the Words 'Muslim', 'Islam', 'Arab, and 'South Asian'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Score",
+       y = "Count") +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino")) 
+
+# Numerical spectrum with tweets including the word Muslim, Islam, Arab, 
+#  South Asian, and Anti-Democratic - my aggregate data
+
+tweet_aggregate_sentiment %>%
+  inner_join(get_sentiments("afinn")) %>%
+  ggplot(mapping = aes(x = value)) +
+  geom_histogram(bins = 30, fill = "lightskyblue") +
+  ylim(0, 500) +
+  labs(title = "Numerical Scale of Sentiment in Tweets Including the Words 'Muslim', 'Islam', 'Arab, 'South Asian', and 'Anti-Democratic'", 
+       subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+       caption = "Source: Twitter", 
+       x = "Score",
+       y = "Count") +
+  theme_bw() +
+  theme(text = element_text(family = "Palatino"))  
 
 ```
 
