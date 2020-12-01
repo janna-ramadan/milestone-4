@@ -99,7 +99,7 @@ write_csv(fbicompiled, "fbicompiled.csv")
 # Externally downloaded the data so that I could manually add data points from
 # 1996 - 2011. Below is complete hate crime data set.
 
-fbi_compiled_complete <- read_csv("fbi_compiled_complete.csv",
+fbi_compiled_complete <- read_csv("milestone4/fbi_compiled_complete.csv",
 col_types = list(
   bias_motivation = col_character(),
   count = col_double(),
@@ -186,43 +186,22 @@ ggplot(data = newstrends08_20, mapping = aes(x = date,
 
 ```
 
-
 ```{r}
-fit_hatecrimes <- stan_glm(data = fbi_compiled_complete,
-                  count ~ bias_motivation -1,
-                  family = gaussian, 
-                  refresh = 0) 
+# count on ke words
+test3 <- newstrends08_20 %>%
+  group_by(year, key_word) %>%
+  summarize(mean_value = mean(value)) %>%
+  mutate(year = as.character(year)) %>%
+  left_join(fbi_compiled_complete, by = "year") %>%
+  drop_na() 
 
-print(fit_hatecrimes, digits = 3)
-
-fit_newstrends <- stan_glm(data = newstrends08_20,
-                  value ~ key_word + date -1,
-                  family = gaussian, 
-                  refresh = 0) %>%
-  as_tibble()
-
-print(fit_newstrends, digits = 3)
-```
-
-```{r}
-posterior_predict(fit_hatecrimes, newdata = fit_newstrends) %>%
-  as_tibble() 
-
-```
-
-```{r}
-fbi_compiled_complete
-
-newstest <- newstrends08_20 %>%
-  select(-date, -month, -month_name) %>%
-  mutate(year = as.character(year)) 
-
-test <- full_join(fbi_compiled_complete, newstest) %>%
-  drop_na()
-
-stan_glm(data = test,
-         count ~ bias_motivation + year -1,
+stan_glm(data = test3, 
+         count ~ mean_value + key_word - 1,
          refresh = 0)
+
+# going into - vaues = which equal relationship isn't strong correlation
+
+# key word by mean value and count 
 
 ```
 

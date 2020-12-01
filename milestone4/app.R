@@ -19,18 +19,36 @@ library(gifski)
 
 fbi_compiled_complete <- read_csv("fbi_compiled_complete.csv")
 newstrends0820 <- read_csv("newstrends0820.csv")
+
 tweetfile_clean <- read_csv("tweetfile_clean.csv")
 tweetfile_clean_muslim <- read_csv("tweetfile_clean_muslim.csv")
 tweetfile_clean_islam <- read_csv("tweetfile_clean_islam.csv")
 tweetfile_clean_arab_sa <- read_csv("tweetfile_clean_arab_sa.csv")
 tweetfile_clean_antidem <- read_csv("tweetfile_clean_antidem.csv")
 tweetfile_clean_ethnic <- read_csv("tweetfile_clean_ethnic.csv")
+
 tweet_muslim_sentiment <- read_csv("tweetfile_muslim_sentiment.csv")
 tweet_islam_sentiment <- read_csv("tweetfile_islam_sentiment.csv")
 tweet_arab_sa_sentiment <- read_csv("tweetfile_arab_sa_sentiment.csv")
 tweet_antidem_sentiment <- read_csv("tweetfile_antidem_sentiment.csv")
 tweet_ethnic_sentiment <- read_csv("tweetfile_ethnic_sentiment.csv")
 tweet_aggregate_sentiment <- read_csv("tweetfile_aggregate_sentiment.csv")
+
+muslimwords <- read_csv("muslimwords.csv")
+islamwords <- read_csv("islamwords.csv")
+arabsawords <- read_csv("arabsawords.csv")
+antidemwords <- read_csv("antidemwords.csv")
+ethnicwords <- read_csv("ethnicwords.csv")
+totalwords <- read_csv <- ("totalwords.csv")
+
+muslim_numerical <- read_csv("muslim_numerical.csv")
+islam_numerical <- read_csv("islam_numerical.csv")
+arabsa_numerical <- read_csv("arabsa_numerical.csv")
+antidem_numerical <- read_csv("antidem_numerical.csv")
+ethnic_numerical <- read_csv("ethnic_numerical.csv")
+aggregate_numerical <- read_csv("muslim_numerical.csv")
+
+write_csv(results_tibble, "ci.csv")
 
 
 # Define UI for application 
@@ -137,16 +155,12 @@ titlePanel("Islamophobia in the United States:
                  sidebarPanel(
                      selectInput("word_association", 
                                  "Twitter Word Associations",
-                                 choices = c("Muslim" = 
-                                                 "tweetfile_clean_muslim", 
-                                             "Islam" = "tweetfile_clean_islam",
-                                             "Arab and South Asian" =
-                                            "tweetfile_clean_arab_sa",
-                                             "Anti-Democratic" = 
-                                                "tweetfile_clean_antidem",
+                                 choices = c("Muslim" = "muslim", 
+                                             "Islam" = "islam",
+                                             "Arab and South Asian" = "arabsa",
+                                             "Anti-Democratic" = "antidem",
                                              "Aggregate of Muslim, Islam,
-                                             Arab, and South Asian" = 
-                                                "tweetfile_clean_ethnic"))),
+                                             Arab, and South Asian" = "ethnic"))),
                  mainPanel(
                      p("Explore social media activity relating to islamophobia
                through most frequent words and sentiment analysis of tweets
@@ -177,8 +191,7 @@ titlePanel("Islamophobia in the United States:
                considered White, and it was not until 2014 that the FBI began
                to collect separate data on hate crimes motivated by Anti-Arab
                sentiment, which is why the data starts in 2014."),
-             br(),
-             plotOutput("fbicompiled"))))
+             br())))
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -197,10 +210,8 @@ server <- function(input, output) {
                        col = "lightskyblue2", 
                        lty = "dashed") +
             theme_bw() +
-            labs(title = "1996-2018 Count of Hate Crimes Motivated By 
-                 Anti-Muslim or Anti-Arab Sentiment",
-                 subtitle = "Counts victims of hate crimes within the 
-                 United States",
+            labs(title = "1996-2018 Count of Hate Crimes Motivated By Anti-Muslim or Anti-Arab Sentiment",
+                 subtitle = "Counts victims of hate crimes within the United States",
                  x = "Year",
                  y = "Victim Count",
                  caption = "Source: FBI Hate Crimes") +
@@ -208,7 +219,7 @@ server <- function(input, output) {
                                labels = c("Anti-Arab \nSentiment", 
                                           "Anti-Muslim \nSentiment"),
                                values = c("olivedrab3", "lightskyblue2")) +
-            theme(axis.text.x = element_text(size = 5, angle = 45),
+            theme(axis.text.x = element_text(size = 10, angle = 45),
                   text = element_text(family = "Palatino"))
         
     })
@@ -216,43 +227,36 @@ server <- function(input, output) {
     output$newstrends0820 <- renderImage({
         outfile <- tempfile(fileext='.gif')
         newsplot <- ggplot(data = newstrends0820, mapping = aes(x = date,
-                                                y = value,
-                                                color = key_word)) +
-        geom_line() +
-        transition_reveal(date) +
-        scale_x_date(date_labels = "%b/%Y", date_breaks = "year") +
-        theme(axis.text.x = element_text(size = 5, angle = 90),
-              text = element_text(family = "Palatino")) +
-        scale_color_manual(values = c("olivedrab3", "brown2"),
-                           labels = c("Muslim", "Terorrism"),
-                           name = "Key Word Search Term") +
-        labs(title = "Level of Search Interest in the Topic 'Muslim' and
-                 Search Term 'Terrorist'",
-             subtitle = "Values Based on Google News Search Trends Between
-                 2008 and 2020",
-             x = "Date",
-             y = "Relative Interest (with respect to peak search
+                                                                y = value,
+                                                                color = key_word)) +
+            geom_line() +
+            transition_reveal(date) +
+            scale_x_date(date_labels = "%b/%Y", date_breaks = "year") +
+            theme(axis.text.x = element_text(size = 5, angle = 90),
+                  text = element_text(family = "Palatino")) +
+            scale_color_manual(values = c("olivedrab3", "brown2"),
+                               labels = c("Muslim", "Terorrism"),
+                               name = "Key Word Search Term") +
+            labs(title = "Level of Search Interest in the Topic 'Muslim' and Search Term 'Terrorist'",
+                 subtitle = "Values Based on Google News Search Trends Between 2008 and 2020",
+                 x = "Date",
+                 y = "Relative Interest (with respect to peak search
                  frequency)",
-             caption = "Source: Google News Trends")
+                 caption = "Source: Google News Trends")
         animate(newsplot, nframes = 75, render = gifski_renderer("outfile.gif"))
         list(src = "outfile.gif", contentType = "image/gif")
-    
+        
     })
     
     output$aggregate_word_association <- renderPlot({
         
-        tweetfile_clean %>%
-            count(word, sort = TRUE) %>%
-            top_n(20) %>%
-            mutate(word = reorder(word, n)) %>%
-            ggplot(mapping = aes(x = word, y = n)) +
+        ggplot(data = totalwords, 
+               mapping = aes(x = word, y = n)) +
             geom_col(fill = "slategray2") +
             xlab(NULL) +
             coord_flip() +
             theme_minimal() +
-            labs(title = "Top 20 Most Frequent Words Across Tweets
-                 Including \nthe Words 'Muslim, 'Islam', 'Arab', 
-                 'South Asian', and 'Anti-Democratic'",
+            labs(title = "Top 10 Most Frequent Words Across Tweets Including \nthe Words 'Muslim, 'Islam', 'Arab', 'South Asian', and 'Anti-Democratic",
                  subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
                  caption = "Source: Twitter", 
                  x = "Count",
@@ -260,107 +264,97 @@ server <- function(input, output) {
         
     })
     
-    output$tweetfile_clean_muslim <- renderPlot({
+    output$word_association <- renderPlot({
         
-        tweetfile_clean_muslim %>%
-            count(word, sort = TRUE) %>%
-            top_n(20) %>%
-            mutate(word = reorder(word, n)) %>%
-            ggplot(mapping = aes(x = word, y = n)) +
-            geom_col(fill = "firebrick2") +
-            xlab(NULL) +
-            coord_flip() +
-            theme_minimal() +
-            labs(title = "Top 20 Most Frequent Words Across Tweets Including
-                 \nthe Word 'Muslim",
-                 subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
-                 caption = "Source: Twitter", 
-                 x = "Count",
-                 y = "Unique Words")
+        if(input$word_association == "muslim") {
         
-    })
-    
-    output$tweetfile_clean_islam <- renderPlot({
+            ggplot(data = muslimwords, mapping = aes(x = word, y = n)) +
+                geom_col(fill = "firebrick2") +
+                xlab(NULL) +
+                coord_flip() +
+                theme_minimal() +
+                labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word
+       'Muslim'",
+                     subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+                     caption = "Source: Twitter", 
+                     x = "Count",
+                     y = "Unique Words")
         
-        tweetfile_clean_islam %>%
-            count(word, sort = TRUE) %>%
-            top_n(20) %>%
-            mutate(word = reorder(word, n)) %>%
-            ggplot(mapping = aes(x = word, y = n)) +
-            geom_col(fill = "firebrick2") +
-            xlab(NULL) +
-            coord_flip() +
-            theme_minimal() +
-            labs(title = "Top 20 Most Frequent Words Across Tweets
-                 Including \nthe Word 'Islam'",
-                 subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
-                 caption = "Source: Twitter", 
-                 x = "Count",
-                 y = "Unique Words")
+        }
         
-    })
-    
-    output$tweetfile_clean_arab_sa <- renderPlot({
+        else{
+            if(input$word_association == "islam") {
+                ggplot(data = islamwords, mapping = aes(x = word, y = n)) +
+                    geom_col(fill = "firebrick2") +
+                    xlab(NULL) +
+                    coord_flip() +
+                    theme_minimal() +
+                    labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word 
+       'Islam'",
+                         subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+                         caption = "Source: Twitter", 
+                         x = "Count",
+                         y = "Unique Words")
+            }
+            
+            else{
+                if(input$word_association == "arabsa") {
+                    ggplot(data = arabsawords, mapping = aes(x = word, y = n)) +
+                        geom_col(fill = "firebrick2") +
+                        xlab(NULL) +
+                        coord_flip() +
+                        theme_minimal() +
+                        labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word 
+       'Arab' and 'South Asian",
+                             subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+                             caption = "Source: Twitter", 
+                             x = "Count",
+                             y = "Unique Words")
+                }
+                
+                else{
+                    if(input$word_association == "antidem") {
+                        ggplot(data = antidemwords, mapping = aes(x = word, y = n)) +
+                            geom_col(fill = "firebrick2") +
+                            xlab(NULL) +
+                            coord_flip() +
+                            theme_minimal() +
+                            labs(title = "Top 10 Most Frequent Words In Tweets Including \nthe Word 'Anti-Democratic'",
+                                 subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+                                 caption = "Source: Twitter", 
+                                 x = "Count",
+                                 y = "Unique Words")
+                    }
+                    
+                    else{ 
+                        if(input$word_association == "ethnic") {
+                        ggplot(data = ethnicwords, mapping = aes(x = word, y = n)) +
+                            geom_col(fill = "firebrick2") +
+                            xlab(NULL) +
+                            coord_flip() +
+                            theme_minimal() +
+                            labs(title = "Top 10 Most Frequent Words Across Tweets Including \nthe Words 'Muslim, 'Islam', 'Arab', and 'South Asian'",
+                                 subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
+                                 caption = "Source: Twitter", 
+                                 x = "Count",
+                                 y = "Unique Words")
+                        }
+                    }
+                }
+            }
+                
+                
+                
+            }
+                
+                }
         
-        tweetfile_clean_arab_sa %>%
-            count(word, sort = TRUE) %>%
-            top_n(20) %>%
-            mutate(word = reorder(word, n)) %>%
-            ggplot(mapping = aes(x = word, y = n)) +
-            geom_col(fill = "firebrick2") +
-            xlab(NULL) +
-            coord_flip() +
-            theme_minimal() +
-            labs(title = "Top 20 Most Frequent Words Across Tweets
-                 Including \nthe Words 'Arab' and 'South Asian'",
-                 subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
-                 caption = "Source: Twitter", 
-                 x = "Count",
-                 y = "Unique Words")
         
-    })
-    
-    output$tweetfile_clean_antidem <- renderPlot({
         
-        tweetfile_clean_antidem %>%
-            count(word, sort = TRUE) %>%
-            top_n(20) %>%
-            mutate(word = reorder(word, n)) %>%
-            ggplot(mapping = aes(x = word, y = n)) +
-            geom_col(fill = "firebrick2") +
-            xlab(NULL) +
-            coord_flip() +
-            theme_minimal() +
-            labs(title = "Top 20 Most Frequent Words Across Tweets
-                 Including \nthe Word 'Anti-Democratic'",
-                 subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
-                 caption = "Source: Twitter", 
-                 x = "Count",
-                 y = "Unique Words")
+        )
         
-    })
-    
-    output$tweetfile_clean_ethnic <- renderPlot({
         
-        tweetfile_clean_ethnic %>%
-            count(word, sort = TRUE) %>%
-            top_n(20) %>%
-            mutate(word = reorder(word, n)) %>%
-            ggplot(mapping = aes(x = word, y = n)) +
-            geom_col(fill = "firebrick2") +
-            xlab(NULL) +
-            coord_flip() +
-            theme_minimal() +
-            labs(title = "Top 20 Most Frequent Words Across Tweets
-                 Including \nthe Words 'Muslim, 'Islam', 'Arab', 
-                 and 'South Asian',",
-                 subtitle = "Tweets gathered Nov. 3 - Nov. 17, 2020",
-                 caption = "Source: Twitter", 
-                 x = "Count",
-                 y = "Unique Words")
-        
-    })
-}
+    }
 
 
 # Run the application
