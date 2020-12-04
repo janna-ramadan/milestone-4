@@ -21,6 +21,7 @@ library(rstanarm)
 library(dbplyr)
 library(lubridate)
 library(janitor)
+library(broom.mixed)
 
 ```
 
@@ -195,13 +196,46 @@ test3 <- newstrends08_20 %>%
   left_join(fbi_compiled_complete, by = "year") %>%
   drop_na() 
 
-stan_glm(data = test3, 
+fit_1 <- stan_glm(data = test3, 
          count ~ mean_value + key_word - 1,
-         refresh = 0)
+         refresh = 0) 
 
 # going into - vaues = which equal relationship isn't strong correlation
 
 # key word by mean value and count 
 
+model_tbl <- tbl_regression(fit_1, intercept = TRUE) %>%
+  as_gt() %>%
+  tab_header(title = "Predictive Regression of Count of Hate Crimes",
+             subtitle = "The Effect of News Searches
+             Including Key Words 'Muslim' or 'Terrorism'")
+
+model_tbl
+
+
+
+```
+
+```{r}
+characteryearnews <- newstrends08_20 %>%
+  group_by(year, key_word) %>%
+  summarize(mean_value = mean(value)) %>%
+  mutate(year = as.character(year)) 
+
+
+  characteryearnews %>%
+    left_join(fbi_compiled_complete, by = "year") %>%
+  drop_na() %>%
+  stan_glm(data = ., 
+         count ~ mean_value + key_word - 1,
+         refresh = 0,
+         family = gaussian) %>%
+  tbl_regression(., intercept = TRUE) %>%
+  as_gt() %>%
+  tab_header(title = "Predictive Regression of Count of Hate Crimes",
+             subtitle = "The Effect of News Searches
+             Including Key Words 'Muslim' or 'Terrorism'")
+
+write_csv(characteryearnews, "characteryearnews.csv")
 ```
 
