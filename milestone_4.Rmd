@@ -192,38 +192,10 @@ ggplot(data = newstrends08_20, mapping = aes(x = date,
 
 ```
 
-```{r, newstrend vs hate crime regression}
-# count on key words
+```{r, hate crime vs. news searches regression}
 
-test3 <- newstrends08_20 %>%
-  group_by(year, key_word) %>%
-  summarize(mean_value = mean(value)) %>%
-  mutate(year = as.character(year)) %>%
-  left_join(fbi_compiled_complete, by = "year") %>%
-  drop_na() 
+# Regression hate crimes by new searches
 
-fit_1 <- stan_glm(data = test3, 
-         count ~ mean_value + key_word - 1,
-         refresh = 0) 
-
-# The CI values cross zero and the range is just massive for the impact key
-# word searches have on hate crime values, which tells us there's 
-# isn't a strong correlation.
-
-
-#regression table
-
-model_tbl <- tbl_regression(fit_1, intercept = TRUE) %>%
-  as_gt() %>%
-  tab_header(title = "Predictive Regression of Count of Hate Crimes",
-             subtitle = "The Effect of News Searches
-             Including Key Words 'Muslim' or 'Terrorism'")
-
-model_tbl
-
-```
-
-```{r}
 characteryearnews <- newstrends08_20 %>%
   group_by(year, key_word) %>%
   summarize(mean_value = mean(value)) %>%
@@ -244,5 +216,7 @@ characteryearnews <- newstrends08_20 %>%
              Including Key Words 'Muslim' or 'Terrorism'")
 
 write_csv(characteryearnews, "characteryearnews.csv")
+
+# written so I can move it to shiny
 ```
 

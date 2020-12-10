@@ -107,7 +107,16 @@ titlePanel("Perpetuating Islamophobia in the United States:
              Muslim Ban and its three iterations since banned immigration
              from Muslim-majority nations, and the rise in hate crimes against
              Muslims and Arabs, a community commonly associated with
-             the Muslim American population."),
+             the Muslim American population. Looking at the graph, note 
+            increases in hate crimes in 2001 (9/11) and between 2015, 2016,
+              and 2017 (the rise of the Trump campaign, election, and Muslim
+               ban). The FBI only began collecting hate crimes done with an
+               anti-Arab motivation in 2015, and until now, they do not count 
+               anti-South Asian motivated hate crimes separate from anti-Asian
+               hate crimes. Thus, data on anti-South Asian sentiment motivated 
+               hate crimes is not available. The dashed line represents the
+               average amount of annual hate crimes for each respective 
+               motivation."),
              br(),
              plotOutput("fbicompiled"),
              br(),

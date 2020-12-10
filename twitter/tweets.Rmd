@@ -6,6 +6,9 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+
+# libraries
+
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
@@ -25,6 +28,9 @@ library(broom.mixed)
 
 
 ```{r}
+
+# Pulling key to scrape twitter
+
 appname <- "muslimopinion"
   
 key <- "nTjL6wXzSH6m0A0NWaYOqJ7qH76Y8q01Jaa1YNujCdjAjk4poQ"
@@ -82,6 +88,8 @@ antidem_tweets <- search_tweets(type = "recent",
 
 ```{r}
 
+# merges the tweet datasets into one
+
 filelist <- tweets <- list.files(pattern = "*.RDS")
 
 #i in = sets lengths of i; how many files to bound them all
@@ -106,7 +114,7 @@ tweetfile <- tweeteater(filelist) %>%
   mutate(date = as.Date(created_at)) %>%
   mutate(filename = str_extract(dataset, ".*(?=_2)"))
 
-# used ? lookahead to get everything before _2 in _2020...
+# used ? lookahead to get everything before _2 in _2020
 
 ```
 
@@ -114,7 +122,8 @@ tweetfile <- tweeteater(filelist) %>%
 # for front page - will show the common/unique words that come with each
 # twitter search
 
-# Remmoves http elements 
+# Removes http elements 
+
 tweetfile$stripped_text <- gsub("http\\S+", 
                                   "",
                                  tweetfile$text)
@@ -122,7 +131,9 @@ tweetfile$stripped_text <- gsub("http\\S+",
 # converts the tweets into lowercase, removes punctuation, and adds an id for
 # each tweet.
 # Also removes "stop words" which are words like I, being, have, etc. 
-# They are words not useful in sentiment analysis
+# They are words not useful in sentiment analysis.
+
+# Cleaned tweets key word Muslim
 
 tweetfile_clean_muslim <- tweetfile %>%
   filter(filename == "muslim_tweets") %>%
@@ -130,11 +141,15 @@ tweetfile_clean_muslim <- tweetfile %>%
   unnest_tokens(word, stripped_text) %>%
   anti_join(stop_words)
 
+# Cleaned tweets key word Arab and South Asian
+
 tweetfile_clean_arab_sa <- tweetfile %>%
   filter(filename == "muslim_arab_southasian_tweets") %>%
   select(stripped_text) %>%
   unnest_tokens(word, stripped_text) %>%
   anti_join(stop_words)
+
+# Cleaned tweets key word Islam
 
 tweetfile_clean_islam <- tweetfile %>%
     filter(filename == "islam_tweets") %>%
@@ -142,16 +157,22 @@ tweetfile_clean_islam <- tweetfile %>%
   unnest_tokens(word, stripped_text) %>%
   anti_join(stop_words)
 
+# Cleaned tweets key word Anti Democratic
+
 tweetfile_clean_antidem <- tweetfile %>%
     filter(filename == "antidem_tweets") %>%
   select(stripped_text) %>%
   unnest_tokens(word, stripped_text) %>%
   anti_join(stop_words)
 
+# Cleaned tweets aggregate
+
 tweetfile_clean <- tweetfile %>%
   select(stripped_text) %>%
   unnest_tokens(word, stripped_text) %>%
   anti_join(stop_words)
+
+# Cleaned tweets ethnic term aggregate (Muslim, Islam, Arab, South Asian)
 
 tweetfile_clean_ethnic <- tweetfile %>%
   filter(filename == c("muslim_tweets", "islam_tweets", "muslim_arab_southasian_tweets")) %>%
@@ -169,8 +190,11 @@ tweetfile_clean_ethnic <- tweetfile %>%
 ```
 
 ```{r, top 10 words }
-# The following graphs have the same format. They look at the top 10 most
-# frequent words in the data sets. 
+# The following graphs have the same format. They look at the top 20 most
+# frequent words in the data sets. Red vs. Blue color is to allow comparison
+# between aggregate and selected key words.
+
+# Graph for Muslim key word
 
 muslimwords <- tweetfile_clean_muslim %>%
   count(word, sort = TRUE) %>%
@@ -189,6 +213,8 @@ muslimwords <- tweetfile_clean_muslim %>%
        x = "Count",
        y = "Unique Words")
 
+# Graph for Arab and South Asians key word
+  
 arabsawords <- tweetfile_clean_arab_sa %>%
   count(word, sort = TRUE) %>%
   top_n(20) %>%
@@ -208,6 +234,9 @@ arabsawords <- tweetfile_clean_arab_sa %>%
 
 # Key words clearly tied to election
 
+  
+# Graph for Islam key word
+  
 islamwords <- tweetfile_clean_islam %>%
   count(word, sort = TRUE) %>%
   top_n(20) %>%
@@ -227,6 +256,9 @@ islamwords <- tweetfile_clean_islam %>%
 
 # surprisingly peaceful
 
+  
+# Graph for Anti-democratic key word
+  
 antidemwords <- tweetfile_clean_antidem %>%
   count(word, sort = TRUE) %>%
   top_n(20) %>%
@@ -245,6 +277,9 @@ antidemwords <- tweetfile_clean_antidem %>%
 
 # Again, heavily influenced by the election
 
+  
+# Graph for aggregate
+  
 totalwords <- tweetfile_clean %>%
   count(word, sort = TRUE) %>%
   top_n(20) %>%
@@ -261,9 +296,13 @@ totalwords <- tweetfile_clean %>%
        caption = "Source: Twitter", 
        x = "Count",
        y = "Unique Words")
+  
 # Anti is the top, but it is weighted by anti-democratic. Clearly impacted by
 # the election results and Kamala Harris, the VP-elect
 
+  
+# Graph for Aggregate Ethnic terms
+  
 ethnicwords <- tweetfile_clean_ethnic %>%
   count(word, sort = TRUE) %>%
   top_n(20) %>%
@@ -285,7 +324,8 @@ ethnicwords <- tweetfile_clean_ethnic %>%
 
 ```{r, sentiment analysis muslim}
 # Used bing analysis - which counts positive and negative words. Trump is coded
-# as positive. 
+# as positive because of love trumps hate. Vice coded as negative because
+# vice is associated with intoxicant substances. Sentiment analysis for Muslim.
 
 
 tweet_muslim_sentiment <- tweetfile_clean_muslim %>%
@@ -316,8 +356,9 @@ tweet_muslim_sentiment <- tweetfile_clean_muslim %>%
 ```
 
 ```{r, sentiment analysis islam}
-# Used bing analysis - which counts positive and negative words. Trump is 
-# coded as positive. 
+# Used bing analysis - which counts positive and negative words. Trump is coded
+# as positive because of love trumps hate. Vice coded as negative because
+# vice is associated with intoxicant substances. Sentiment analysis for Islam.
 
 tweet_islam_sentiment <- tweetfile_clean_islam %>%
   inner_join(get_sentiments("bing")) %>%
@@ -346,7 +387,9 @@ tweet_islam_sentiment <- tweetfile_clean_islam %>%
 
 ```{r, sentiment analysis arab and south asian}
 # Used bing analysis - which counts positive and negative words. Trump is coded
-# as positive. 
+# as positive because of love trumps hate. Vice coded as negative because
+# vice is associated with intoxicant substances. Sentiment analysis for 
+# Arab and South Asian.
 
 tweet_arab_sa_sentiment <- tweetfile_clean_arab_sa %>%
   inner_join(get_sentiments("bing")) %>%
@@ -374,8 +417,10 @@ tweet_arab_sa_sentiment <- tweetfile_clean_arab_sa %>%
 ```
 
 ```{r, sentiment analysis anti-dem}
-# Used bing analysis - which counts positive and negative words. Trump is 
-# coded as positive. 
+# Used bing analysis - which counts positive and negative words. Trump is coded
+# as positive because of love trumps hate. Vice coded as negative because
+# vice is associated with intoxicant substances. Sentiment analysis for 
+# Anti-Democratic.
 
 tweet_antidem_sentiment <- tweetfile_clean_antidem %>%
   inner_join(get_sentiments("bing")) %>%
@@ -404,7 +449,9 @@ tweet_antidem_sentiment <- tweetfile_clean_antidem %>%
 
 ```{r, sentiment analysis aggregate}
 # Used bing analysis - which counts positive and negative words. Trump is coded
-# as positive. 
+# as positive because of love trumps hate. Vice coded as negative because
+# vice is associated with intoxicant substances. Sentiment analysis for 
+# aggregate.
 
 tweet_aggregate_sentiment <- tweetfile_clean %>%
   inner_join(get_sentiments("bing")) %>%
@@ -434,8 +481,10 @@ tweet_aggregate_sentiment <- tweetfile_clean %>%
 ```
 
 ```{r, sentiment analysis aggregate ethnic}
-# Used bing analysis - which counts positive and negative words. Trump is 
-# coded as positive. 
+# Used bing analysis - which counts positive and negative words. Trump is coded
+# as positive because of love trumps hate. Vice coded as negative because
+# vice is associated with intoxicant substances. Sentiment analysis for 
+# ethnic aggregate.
 
 tweet_ethnic_sentiment <- tweetfile_clean_ethnic %>%
   inner_join(get_sentiments("bing")) %>%
@@ -619,6 +668,7 @@ muslim_straps <- muslim_sentiment_predictvector %>%
 muslimci <- muslim_straps$value_mean
 
 # Islam tweet word sentiment predictor
+
 islam_sentiment_predict <- islam_numerical %>%
   mutate(weighted = n*value)
 
@@ -636,6 +686,7 @@ islam_straps <- islam_sentiment_predictvector %>%
 islamci <- islam_straps$value_mean
 
 # Arab and South Asian tweet word sentiment predictor
+
 arab_sa_sentiment_predict <- arabsa_numerical %>%
   mutate(weighted = n*value)
 
@@ -653,6 +704,7 @@ arab_sa_straps <- arab_sa_sentiment_predictvector %>%
 arab_saci <- arab_sa_straps$value_mean
 
 # Anti-Democratic tweet word sentiment predictor
+
 antidem_sentiment_predict <- antidem_numerical %>%
   mutate(weighted = n*value)
 
@@ -670,6 +722,7 @@ antidem_straps <- antidem_sentiment_predictvector %>%
 antidemci <- antidem_straps$value_mean
 
 # Aggregate Ethnic tweet word sentiment predictor
+
 ethnic_sentiment_predict <- ethnic_numerical %>%
   mutate(weighted = n*value)
 
@@ -688,6 +741,7 @@ ethnic_straps <- ethnic_sentiment_predictvector %>%
 ethnicci <- ethnic_straps$value_mean
 
 # Aggregate tweet word sentiment predictor
+
 aggregate_sentiment_predict <- aggregate_numerical %>%
   mutate(weighted = n*value)
 
@@ -706,6 +760,7 @@ aggregate_straps <- aggregate_sentiment_predictvector %>%
 aggregateci <- aggregate_straps$value_mean
 
 #manual tibble creation for confidence interval quantiles for c 95
+
 results_tibble <- tibble(tweet_type = c("Muslim", 
                                         "Islam",
                                         "Arab and South Asian",
@@ -731,42 +786,17 @@ results_tibble <- tibble(tweet_type = c("Muslim",
                                    quantile(ethnicci, 0.975),
                                    quantile(aggregateci, 0.975))) 
 results_tibble
+
 # make it for all and join
 
 
-# library(gtsummary)
-# library(gt)
-# 
-# output$predictTable <- render_gt(
-#         pred_table[rep(row.names(pred_table), pred_table$n), 1:3][, c(1, 3)] %>%
-#             rename(Type = type) %>%
-#             tbl_summary(by = year )%>% 
-#             as_gt()
-#     )
-# 
-# 
-# gt_output("predictTable"))
-
-render_gt(
-        pred_table[rep(row.names(pred_table), pred_table$n), 1:3][, c(1, 3)] %>%
-            as_gt()
-    )
-
-results_tibble[rep(row.names(results_tibble), results_tibble$n), 1:3][, c(1, 3)] %>%
-            rename(Type = type) %>%
-            tbl_summary(by = year )%>%
-            as_gt()
-
-results_tibble 
-
-results_tibble
-
-# tbl_regression(intercept = TRUE, estimate_fun = function(x) style_sigfig(x, digits = 5))
 ```
 
 
 
 ```{r, write csv for data imported to shiny}
+
+# Save data sets for shiny 
 
 write_csv(tweetfile_clean, "tweetfile_clean.csv")
 write_csv(tweetfile_clean_muslim, "tweetfile_clean_muslim.csv")
