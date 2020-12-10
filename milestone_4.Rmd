@@ -26,8 +26,8 @@ library(broom.mixed)
 ```
 
 
-```{r, hate-crime-data-set-up}
-# load datasets
+```{r, hate-crime-data-set-up, error = FALSE}
+# Load datasets
 
 
 fbi2018 <- read_excel("rawdata/fbi2018.xls") %>%
@@ -63,8 +63,10 @@ fbi2012 <- read_excel("rawdata/fbi2012.xls") %>%
 ```
 
 ```{r, hate-crime-making-one-data-set }
+
+# Merge fbi hate crime data sets.
+
 fbi78 <- full_join(fbi2018, fbi2017) %>%
-  #  as.data.frame(apply(as.numeric)) %>%
   rename(bias_motivation = "Table 1", count = "...4") %>%
   filter(bias_motivation == "Anti-Islamic (Muslim)" | bias_motivation == "Anti-Arab") 
 
@@ -88,16 +90,16 @@ fbi2_4 <- full_join(fbi2, fbi34)
 
 fbi12_18 <- full_join(fbi2_4, fbi5_8)
 
-  fbi12_18$year <- c("2012", "2013", "2014", "2015", "2015", "2016", "2016", "2018", "2018", "2017", "2017")
+fbi12_18$year <- c("2012", "2013", "2014", "2015", "2015", "2016", "2016", "2018", "2018", "2017", "2017")
 
   fbicompiled <- fbi12_18 %>%
     mutate("count" = as.numeric(count)) %>%
     arrange(desc(count))
-  #find away to set cols earlier while merging
+
     
 write_csv(fbicompiled, "fbicompiled.csv")
   
-# Externally downloaded the data so that I could manually add data points from
+# ^^ Externally downloaded the data so that I could manually add data points from
 # 1996 - 2011. Below is complete hate crime data set.
 
 fbi_compiled_complete <- read_csv("milestone4/fbi_compiled_complete.csv",
@@ -111,18 +113,20 @@ fbi_compiled_complete %>%
   filter(bias_motivation == "Anti-Islamic (Muslim)") %>%
   mutate(mean = mean(count))
 
-# mean Anti-Islamic (Muslim) hate crimes is 163.7826 
+# ^^ mean Anti-Islamic (Muslim) hate crimes is 163.7826. 
 
 fbi_compiled_complete %>%
   filter(bias_motivation == "Anti-Arab") %>%
   mutate(mean = mean(count))
 
-# mean Anti-Islamic (Muslim) hate crimes is 84 
+# ^^ mean Anti-Islamic (Muslim) hate crimes is 84. 
 
   
 ```
 
 ```{r, hate-crime-graph}
+
+# Hate crime graph
 
       ggplot(data = fbi_compiled_complete, mapping = aes(x = year, y = count, color = bias_motivation)) +
         geom_point(size = 2) +
@@ -144,7 +148,8 @@ fbi_compiled_complete %>%
 
 ```{r, google-trend-news-data}
 
-#data download and clean up
+# Google news trend data download and clean up.
+
 newstrends08_20 <- read_csv("rawdata/googletrends.csv",
   col_types = list(
   Month = col_character(),
@@ -156,6 +161,8 @@ newstrends08_20 <- read_csv("rawdata/googletrends.csv",
   clean_names() %>%
   mutate(month = ymd(month, truncated = 1)) 
 
+# Edit data set to set date and reorder based on key word search for each year.
+
 newstrends08_20 <- newstrends08_20 %>%
   pivot_longer(cols = c(muslim, terrorism), 
                names_to = "key_word") %>%
@@ -165,7 +172,7 @@ newstrends08_20 <- newstrends08_20 %>%
 # makes csv of cleaned data
 write_csv(newstrends08_20, "newstrends0820.csv")
 
-#graph of trends
+#graph of news search trends
 ggplot(data = newstrends08_20, mapping = aes(x = date, 
                                               y = value, 
                                               color = key_word)) +
@@ -181,14 +188,13 @@ ggplot(data = newstrends08_20, mapping = aes(x = date,
        y = "Relative Interest (with respect to peak search frequency)", 
        caption = "Source: Google News Trends")
 
-# is this an accurate measure of the news? if it's news searches
-# how do you list multiple graphs in shiny
-# twitter???
+
 
 ```
 
-```{r}
-# count on ke words
+```{r, newstrend vs hate crime regression}
+# count on key words
+
 test3 <- newstrends08_20 %>%
   group_by(year, key_word) %>%
   summarize(mean_value = mean(value)) %>%
@@ -200,9 +206,12 @@ fit_1 <- stan_glm(data = test3,
          count ~ mean_value + key_word - 1,
          refresh = 0) 
 
-# going into - vaues = which equal relationship isn't strong correlation
+# The CI values cross zero and the range is just massive for the impact key
+# word searches have on hate crime values, which tells us there's 
+# isn't a strong correlation.
 
-# key word by mean value and count 
+
+#regression table
 
 model_tbl <- tbl_regression(fit_1, intercept = TRUE) %>%
   as_gt() %>%
@@ -211,8 +220,6 @@ model_tbl <- tbl_regression(fit_1, intercept = TRUE) %>%
              Including Key Words 'Muslim' or 'Terrorism'")
 
 model_tbl
-
-
 
 ```
 
