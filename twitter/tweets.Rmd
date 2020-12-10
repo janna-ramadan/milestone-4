@@ -811,7 +811,7 @@ write_csv(tweet_arab_sa_sentiment, "tweetfile_arab_sa_sentiment.csv")
 write_csv(tweet_antidem_sentiment, "tweetfile_antidem_sentiment.csv")
 write_csv(tweet_ethnic_sentiment, "tweetfile_ethnic_sentiment.csv")
 write_csv(tweet_aggregate_sentiment, "tweetfile_aggregate_sentiment.csv")
-
+ 
 write_csv(muslimwords, "muslimwords.csv")
 write_csv(islamwords, "islamwords.csv")
 write_csv(arabsawords, "arabsawords.csv")

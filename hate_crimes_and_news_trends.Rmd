@@ -1,7 +1,7 @@
 ---
-title: "milestone4"
+title: "hate_crimes_and_news_trends"
 author: "Janna Ramadan"
-date: "10/16/2020"
+date: "12/9/2020"
 output: html_document
 ---
 
@@ -201,7 +201,7 @@ characteryearnews <- newstrends08_20 %>%
   summarize(mean_value = mean(value)) %>%
   mutate(year = as.character(year)) 
 
-
+ 
   characteryearnews %>%
     left_join(fbi_compiled_complete, by = "year") %>%
   drop_na() %>%
@@ -219,4 +219,3 @@ write_csv(characteryearnews, "characteryearnews.csv")
 
 # written so I can move it to shiny
 ```
-

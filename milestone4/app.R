@@ -69,7 +69,7 @@ ci <- read_csv("ci.csv")
 characteryearnews <- read_csv("characteryearnews.csv")
 
 # loading code used in models
-
+ 
 cinewshate <- characteryearnews %>%
     left_join(fbi_compiled_complete, by = "year") %>%
     drop_na() %>%
