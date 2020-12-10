@@ -202,7 +202,7 @@ characteryearnews <- newstrends08_20 %>%
   mutate(year = as.character(year)) 
 
  
-  characteryearnews %>%
+  characteryearnews %>% 
     left_join(fbi_compiled_complete, by = "year") %>%
   drop_na() %>%
   stan_glm(data = ., 
